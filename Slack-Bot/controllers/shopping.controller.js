@@ -6,13 +6,11 @@ const getSort = require('../regexs').shopping.getSort
 
 module.exports = (controller) => {
     controller.hears(searchRegex, ["direct_message", "direct_mention", "mention"], function (bot, message) {
-        let keyword;
-        let sort;
-        commandSplit(message.text, searchRegex)
-            .then((token) => {
-                keyword = token.keyword;
-                return getSort(token.sort)
-            })
+        let keyword = message.match[1];
+        let sort = message.match[2];
+        console.log(keyword);
+
+        getSort(sort)
             .then((_sort) => {
                 sort = _sort;
                 //                      (keyword, display, start, sort)
@@ -27,13 +25,11 @@ module.exports = (controller) => {
     });
 
     controller.hears(searchRegex_reversed, ["direct_message", "direct_mention", "mention"], function (bot, message) {
-        let keyword;
-        let sort;
-        commandSplit(message.text, searchRegex_reversed)
-            .then((token) => {
-                keyword = token.keyword;
-                return getSort(token.sort)
-            })
+        let keyword = matches[matches.length - 2];
+        let sort = message.match[1];
+        console.log(keyword);
+        
+        getSort(sort)
             .then((_sort) => {
                 sort = _sort;
                 //                      (keyword, display, start, sort)
@@ -48,26 +44,4 @@ module.exports = (controller) => {
     });
 
     console.log('Shopping Controller Attached');
-}
-
-
-function commandSplit(command, regex) {
-    return new Promise((resolve, reject) => {
-        if (match) {
-            let matches = command.match(regex);
-            console.log(matches);
-            if (regex === searchRegex) {
-                resolve({
-                    "keyword": matches[1],
-                    "sort": matches[2]
-                });
-            } else {
-                resolve({
-                    "keyword": matches[matches.length - 2],
-                    "sort": matches[1]
-                });
-            }
-        }
-        throw new Error('Can not parse your command');
-    });
 }
