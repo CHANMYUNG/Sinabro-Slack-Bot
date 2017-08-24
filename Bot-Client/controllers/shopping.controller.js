@@ -1,4 +1,4 @@
-const naverAPI = require('../apiCalls/naver');
+const naverAPI = require('../../APICalls/naver');
 const searchRegex = require('../regexs').shopping.search;
 const searchRegex_reversed = require('../regexs').shopping.search_reversed;
 const getSort = require('../regexs').shopping.getSort
