@@ -2,13 +2,13 @@ const naverAPI = require('../../APICalls/naver');
 const searchRegex = require('../regexs').shopping.search;
 const searchRegex_reversed = require('../regexs').shopping.search_reversed;
 const getSort = require('../regexs').shopping.getSort
-
+const Log = require('../../Database/models/searchLog')
 
 module.exports = (controller) => {
     controller.hears(searchRegex, ["direct_message", "direct_mention", "mention"], function (bot, message) {
         let keyword;
         let sort;
-
+        let totalPages;
         commandSplit(message.text, searchRegex)
             .then((token) => {
                 keyword = token.keyword;
@@ -20,10 +20,26 @@ module.exports = (controller) => {
                 return naverAPI.shopping.search(keyword, 3, 1, sort)
             })
             .then((body) => {
-                return createInteractiveMessage(body.lastBuildDate, body.items);
+                totalPage = body.total;
+                return createInteractiveMessage(body);
             })
             .then((interactiveMessage) => {
-                bot.reply(message, interactiveMessage);
+                //console.log(interactiveMessage);
+                bot.reply(message, interactiveMessage, function (err, sentMessage) {
+                    // ts값을 가져와 Log생성
+                    let channel = sentMessage.channel;
+                    let ts = sentMessage.ts;
+
+                    Log.create(channel, ts, keyword, sort, 1, totalPages).then(() => {
+                        console.log("===========LOG===========");
+                        console.log(`channel : ${channel}`);
+                        console.log(`ts : ${ts}`);
+                        console.log(`keyword : ${keyword}`);
+                        console.log(`sort : ${sort}`);
+                        console.log(`page : ${1}`);
+                        console.log(`totalPage : ${totalPage}`);
+                    })
+                });
             })
             .catch((err) => {
                 bot.reply(message, err.message)
@@ -33,6 +49,7 @@ module.exports = (controller) => {
     controller.hears(searchRegex_reversed, ["direct_message", "direct_mention", "mention"], function (bot, message) {
         let keyword;
         let sort;
+        let totalPages;
         commandSplit(message.text, searchRegex_reversed)
             .then((token) => {
                 keyword = token.keyword;
@@ -44,10 +61,26 @@ module.exports = (controller) => {
                 return naverAPI.shopping.search(keyword, 3, 1, sort)
             })
             .then((body) => {
-                return createInteractiveMessage(body.lastBuildDate, body.items);
+                totalPage = body.total;
+                return createInteractiveMessage(body);
             })
             .then((interactiveMessage) => {
-                bot.reply(message, interactiveMessage);
+                //console.log(interactiveMessage);
+                bot.reply(message, interactiveMessage, function (err, sentMessage) {
+                    // ts값을 가져와 Log생성
+                    let channel = sentMessage.channel;
+                    let ts = sentMessage.ts;
+
+                    Log.create(channel, ts, keyword, sort, 1, totalPages).then(() => {
+                        console.log("===========LOG===========");
+                        console.log(`channel : ${channel}`);
+                        console.log(`ts : ${ts}`);
+                        console.log(`keyword : ${keyword}`);
+                        console.log(`sort : ${sort}`);
+                        console.log(`page : ${1}`);
+                        console.log(`totalPage : ${totalPage}`);
+                    })
+                });
             })
             .catch((err) => {
                 bot.reply(message, err.message)
@@ -79,18 +112,23 @@ function commandSplit(command, regex) {
     });
 }
 
-function createInteractiveMessage(date, items) {
-    console.log(items);
+function createInteractiveMessage(body) {
+
+    console.log(body);
+
+
+    let totalPages = parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0);
+    let items = body.items;
     let reply = {
-        "text": `총 1000개 중 1~${items.length}번째 항목입니다.`,
+        "text": `\n총 ${totalPages}페이지 중 1번째 페이지입니다.`,
         "attachments": []
     };
     for (let i in items) {
         reply.attachments.push({
             "fallback": "choose searched things",
-            "callback_id": "choose searched things",
+            "callback_id": "add to cart",
             "color": getRandomColor(),
-            "title": `${Number(i)+1}. ${items[i].title.replace(/<br>/gi, '')}`,
+            "title": `${Number(i)+1}. ${items[i].title.replace(/<br>/g, '').replace(/\/<br>/g,'')}`,
             "title_link": items[i].link,
             "fields": [{
                 "title": `${items[i].lprice}원 ~ ${items[i].hprice}원`,
@@ -115,18 +153,51 @@ function createInteractiveMessage(date, items) {
 
         });
     }
+
     reply.attachments.push({
         "text": "",
-        "callback_id": "choose searched things",
-        "color": getRandomColor(),
+        "callback_id": "pagination",
+        "color": "#5b8426",
         "actions": [{
             "name": "btn",
-            "text": "더보기",
+            "text": "Pre10",
             "type": "button",
-            "value": "more"
+            "value": "pre10"
+        }, {
+            "name": "btn",
+            "text": "Pre",
+            "type": "button",
+            "value": "pre"
+        }, {
+            "name": "btn",
+            "text": "Next",
+            "type": "button",
+            "value": "next"
+        }, {
+            "name": "btn",
+            "text": "Next10",
+            "type": "button",
+            "value": "next10"
         }]
     });
-    console.log(reply);
+
+    reply.attachments.push({
+        "text": "",
+        "callback_id": "pagination",
+        "color": "#5b8426",
+        "actions": [{
+            "name": "btn",
+            "text": "Go to fisrt",
+            "type": "button",
+            "value": "toFirst"
+        }, {
+            "name": "btn",
+            "text": "Go to last",
+            "type": "button",
+            "value": "toLast"
+        }]
+    })
+
     return reply;
 }
 
