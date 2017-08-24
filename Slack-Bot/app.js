@@ -7,10 +7,13 @@ const controller = botkit.slackbot({
 }).configureSlackApp({
     clientId: process.env.ADVANCED_SINABRO_BOT_CLIENTID,
     clientSecret: process.env.ADVANCED_SINABRO_BOT_CLIENTSECRET,
-    scopes: ['bot']
+    scopes: ['bot', 'incoming-webhook']
 });
 
 controller.setupWebserver(process.env.ADVANCED_SINABRO_BOT_PORT, function (err, webserver) {
+    webserver.post('/slack/callback', function (req, res) {
+        console.log('ANDNDNADNADNAD');
+    })
     controller.createWebhookEndpoints(controller.webserver);
 
     controller.createOauthEndpoints(controller.webserver, function (err, req, res) {
