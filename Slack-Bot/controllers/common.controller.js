@@ -13,9 +13,6 @@ module.exports = (controller) => {
         });
     });
 
-    controller.on('direct_message', function (bot, message) {
-        bot.reply(message, message.text);
-    })
     controller.hears('리스트내놔', ["direct_message", "direct_mention", "mention"], function (bot, message) {
         var reply = {
             text: 'HERE IS',
