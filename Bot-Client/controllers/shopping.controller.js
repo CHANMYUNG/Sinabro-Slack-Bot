@@ -8,6 +8,7 @@ module.exports = (controller) => {
     controller.hears(searchRegex, ["direct_message", "direct_mention", "mention"], function (bot, message) {
         let keyword;
         let sort;
+
         commandSplit(message.text, searchRegex)
             .then((token) => {
                 keyword = token.keyword;
@@ -19,7 +20,10 @@ module.exports = (controller) => {
                 return naverAPI.shopping.search(keyword, 3, 1, sort)
             })
             .then((body) => {
-                bot.reply(message, body);
+                return createInteractiveMessage(body.lastBuildDate, body.items);
+            })
+            .then((interactiveMessage) => {
+                bot.reply(message, interactiveMessage);
             })
             .catch((err) => {
                 bot.reply(message, err.message)
@@ -40,7 +44,10 @@ module.exports = (controller) => {
                 return naverAPI.shopping.search(keyword, 3, 1, sort)
             })
             .then((body) => {
-                bot.reply(message, body);
+                return createInteractiveMessage(body.lastBuildDate, body.items);
+            })
+            .then((interactiveMessage) => {
+                bot.reply(message, interactiveMessage);
             })
             .catch((err) => {
                 bot.reply(message, err.message)
@@ -70,4 +77,58 @@ function commandSplit(command, regex) {
         }
         throw new Error('Can not parse your command');
     });
+}
+
+function createInteractiveMessage(date, items) {
+    console.log(items);
+    let reply = {
+        "text": `총 1000개 중 1~${items.length}번째 항목입니다.`,
+        "attachments": []
+    };
+    for (let i in items) {
+        reply.attachments.push({
+            "fallback": "choose searched things",
+            "color": getRandomColor(),
+            "title": `${Number(i)+1}. ${items[i].title.replace(/<br>/gi, '')}`,
+            "title_link": items[i].link,
+            "fields": [{
+                "title": `${items[i].lprice}원 ~ ${items[i].hprice}원`,
+                "short": true
+            }],
+            "thumb_url": items[i].image,
+            "footer": items[i].mallName,
+            "footer_icon": "https://platform.slack-edge.com/img/default_application_icon.png",
+            "actions": [{
+                    "name": "btn",
+                    "text": "팀 장바구니에 담기",
+                    "type": "button",
+                    "value": `to team`
+                },
+                {
+                    "name": "btn",
+                    "text": "개인 장바구니에 담기",
+                    "type": "button",
+                    "value": `to personal`
+                }
+            ]
+
+        });
+    }
+    reply.attachments.push({
+        "text": "",
+        "color": getRandomColor(),
+        "actions": [{
+            "name": "btn",
+            "text": "더보기",
+            "type": "button",
+            "value": "more"
+        }]
+    });
+    console.log(reply);
+    return reply;
+}
+
+
+function getRandomColor() {
+    return '#' + Math.floor(Math.random() * 16777215).toString(16);;
 }

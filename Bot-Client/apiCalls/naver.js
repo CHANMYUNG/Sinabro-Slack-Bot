@@ -19,8 +19,7 @@ exports.shopping = {
                     console.log('NAVER API CALL ERROR OCCURRED')
                     throw err;
                 } else {
-                    console.log(res);
-                    resolve(body);
+                    resolve(JSON.parse(body));
                 }
             });
         });

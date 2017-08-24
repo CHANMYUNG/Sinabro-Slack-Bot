@@ -1,7 +1,7 @@
 const botkit = require('botkit');
 const controllers = require('./controllers');
 const controller = botkit.slackbot();
-const database = require('./database');
+const database = require('../Database');
 
 const bot = controller.spawn({
     token: process.env.ADVANCED_SINABRO_BOT_TOKEN
@@ -10,7 +10,7 @@ const bot = controller.spawn({
 bot.startRTM(function (err, bot, payload) {
     if (err) {
         console.log(err);
-        throw new Error('Slack에 연결할 수 없습니다.');
+        throw new Error('Can not connect to Slack');
     }
 
     database.connect();
