@@ -88,6 +88,7 @@ function createInteractiveMessage(date, items) {
     for (let i in items) {
         reply.attachments.push({
             "fallback": "choose searched things",
+            "callback_id": "choose searched things",
             "color": getRandomColor(),
             "title": `${Number(i)+1}. ${items[i].title.replace(/<br>/gi, '')}`,
             "title_link": items[i].link,
@@ -116,6 +117,7 @@ function createInteractiveMessage(date, items) {
     }
     reply.attachments.push({
         "text": "",
+        "callback_id": "choose searched things",
         "color": getRandomColor(),
         "actions": [{
             "name": "btn",
