@@ -67,13 +67,13 @@ function pagination_middleware(req, res, next) {
                     log.page += 10;
                     break;
                 case 'toLast':
-                    console.log('Go to first pressed');
+                    console.log('Go to last pressed');
                     log.page = log.totalPages;
                     break;
             }
             log.save();
             let start = log.page * 3 - 2;
-            return naverAPI.shopping.search(_log.keyword, 3, start, log.sort);
+            return naverAPI.shopping.search(_log.keyword, start === 1000 ? 1 : 3, start, log.sort);
         })
         .then((body) => {
             console.log(_log.page);
@@ -97,7 +97,7 @@ function createInteractiveMessage(body, page, totalPages) {
     console.log(totalPages);
     let items = body.items;
     let reply = {
-        "text": `\n총 ${totalPages}페이지 중 ${page}번째 페이지입니다.`,
+        "text": `\n총 ${totalPages}페이지 중 ${page}번째 페이지입니다.\n \`봇\`은 최대 334페이지 (1000개)까지만 불러올 수 있습니다.`,
         "attachments": []
     };
     for (let i in items) {
@@ -143,14 +143,14 @@ function createInteractiveMessage(body, page, totalPages) {
                 "name": "btn",
                 "text": "Pre10",
                 "type": "button",
-                "value": "pre10"
+                "value": "prev10"
             })
         }
         next_prev_buttons.actions.push({
             "name": "btn",
             "text": "Pre",
             "type": "button",
-            "value": "pre"
+            "value": "prev"
         })
     }
     if (page < totalPages) {

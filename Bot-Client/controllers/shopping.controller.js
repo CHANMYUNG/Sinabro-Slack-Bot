@@ -20,9 +20,8 @@ module.exports = (controller) => {
                 return naverAPI.shopping.search(keyword, 3, 1, sort)
             })
             .then((body) => {
-                console.log(body.total)
-                totalPages = parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0);
-                return createInteractiveMessage(body);
+                totalPages = (parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0)) > 334 ? 334 : (parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0));
+                return createInteractiveMessage(body, totalPages);
             })
             .then((interactiveMessage) => {
                 //console.log(interactiveMessage);
@@ -32,15 +31,16 @@ module.exports = (controller) => {
                     let ts = sentMessage.ts;
                     console.log(totalPages);
                     // Logging (channel, ts, keyword, sort, page, totalPages)
-                    Log.create(channel, ts, keyword, sort, 1, totalPages).then(() => {
-                        console.log("===========LOG===========");
-                        console.log(`channel : ${channel}`);
-                        console.log(`ts : ${ts}`);
-                        console.log(`keyword : ${keyword}`);
-                        console.log(`sort : ${sort}`);
-                        console.log(`page : ${1}`);
-                        console.log(`totalPage : ${totalPages}`);
-                    })
+                    totalPages =
+                        Log.create(channel, ts, keyword, sort, 1, totalPages).then(() => {
+                            console.log("===========LOG===========");
+                            console.log(`channel : ${channel}`);
+                            console.log(`ts : ${ts}`);
+                            console.log(`keyword : ${keyword}`);
+                            console.log(`sort : ${sort}`);
+                            console.log(`page : ${1}`);
+                            console.log(`totalPage : ${totalPages}`);
+                        })
                 });
             })
             .catch((err) => {
@@ -63,8 +63,8 @@ module.exports = (controller) => {
                 return naverAPI.shopping.search(keyword, 3, 1, sort)
             })
             .then((body) => {
-                totalPages = parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0);
-                return createInteractiveMessage(body);
+                totalPages = (parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0)) > 334 ? 334 : (parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0));
+                return createInteractiveMessage(body, totalPages);
             })
             .then((interactiveMessage) => {
                 //console.log(interactiveMessage);
@@ -115,15 +115,13 @@ function commandSplit(command, regex) {
     });
 }
 
-function createInteractiveMessage(body) {
+function createInteractiveMessage(body, totalPages) {
 
     console.log(body);
 
-
-    let totalPages = parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0);
     let items = body.items;
     let reply = {
-        "text": `\n총 ${totalPages}페이지 중 1번째 페이지입니다.`,
+        "text": `\n총 ${totalPages}페이지 중 1번째 페이지입니다.\n \`봇\`은 최대 334페이지 (1000개)까지만 불러올 수 있습니다.`,
         "attachments": []
     };
     for (let i in items) {
@@ -131,7 +129,7 @@ function createInteractiveMessage(body) {
             "fallback": "choose searched things",
             "callback_id": "add to cart",
             "color": getRandomColor(),
-            "title": `${Number(i)+1}. ${items[i].title.replace(/<br>/g, '').replace(/\/<br>/g,'')}`,
+            "title": `${Number(i)+1}. ${items[i].title.replace(/<b>/g, '').replace(/<\/b>/g,'')}`,
             "title_link": items[i].link,
             "fields": [{
                 "title": `${items[i].lprice}원 ~ ${items[i].hprice}원`,
@@ -180,9 +178,9 @@ function createInteractiveMessage(body) {
         "color": "#5b8426",
         "actions": [{
             "name": "btn",
-            "text": "Go to fisrt",
+            "text": "Go to Last",
             "type": "button",
-            "value": "toFirst"
+            "value": "toLast"
         }]
     })
 
