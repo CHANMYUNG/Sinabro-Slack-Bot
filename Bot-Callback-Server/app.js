@@ -47,31 +47,39 @@ function pagination_middleware(req, res, next) {
 
     let ts = payload.message_ts;
     let channerl = payload.channel;
-    let btnValue = payload.actions[0].value;
+    let btnValue = payload.actions.value;
+    let _log;
+
     Log.findOne({
             ts,
             channel
         }).then((log) => {
             switch (btnValue) {
                 case 'next':
-                    if (log.page === log.totalPages) {
-                        // 페이지가 마지막에 다다랐을 때 처리.
-                    }
-                    break;
+                    _log = log;
+                    log.page += 1;
+                    log.save();
+                    return naverAPI.shopping.search(_log.keyword, 3, (_log.page * 3) + 1);
             }
-            return naverAPI.shopping.search(log.keyword, 3, (log.page * 3) + 1, log.sort);
         })
         .then((body) => {
-            return createInteractiveMessage(body, (log.page + 1) / 3);
+            return createInteractiveMessage(body, (_log.page + 1) / 3, _log.totalPages);
+        })
+        .then((interactiveMessage) => {
+            res.send(interactiveMessage);
+        })
+        .catch((err) => {
+            res.send({
+                'text': `오류가 발생했따리! ${err.message}`,
+                'replace_original': false
+            })
         })
 }
 
-function createInteractiveMessage(body, page) {
+function createInteractiveMessage(body, page, totalPages) {
 
     console.log(body);
 
-
-    let totalPages = parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0);
     let items = body.items;
     let reply = {
         "text": `\n총 ${totalPages}페이지 중 1번째 페이지입니다.`,
@@ -107,33 +115,46 @@ function createInteractiveMessage(body, page) {
 
         });
     }
-
-    reply.attachments.push({
+    let next_prev_buttons = {
         "text": "",
         "callback_id": "pagination",
         "color": "#5b8426",
-        "actions": [{
-            "name": "btn",
-            "text": "Pre10",
-            "type": "button",
-            "value": "pre10-1"
-        }, {
-            "name": "btn",
-            "text": "Pre",
-            "type": "button",
-            "value": "pre-1"
-        }, {
+        "actions": []
+    };
+
+    if (page < totalPages) {
+        next_prev_buttons.actions.push({
             "name": "btn",
             "text": "Next",
             "type": "button",
-            "value": "next-1"
-        }, {
+            "value": "next"
+        })
+        if (page <= (totalPages - 10)) {
+            next_prev_buttons.actions.push({
+                "name": "btn",
+                "text": "Next10",
+                "type": "button",
+                "value": "next10"
+            })
+        }
+    }
+
+    if (1 < page) {
+        next_prev_buttons.actions.push({
             "name": "btn",
-            "text": "Next10",
+            "text": "Pre",
             "type": "button",
-            "value": "next10-1"
-        }]
-    });
+            "value": "pre"
+        })
+        if (11 <= page) {
+            next_prev_buttons.actions.push({
+                "name": "btn",
+                "text": "Pre10",
+                "type": "button",
+                "value": "pre10"
+            })
+        }
+    }
 
     let goToButtons = {
         "text": "",
@@ -142,7 +163,7 @@ function createInteractiveMessage(body, page) {
         "actions": []
     };
 
-    if (0 < page) {
+    if (1 < page) {
         goToButtons.actions.push({
             "name": "btn",
             "text": "Go to fisrt",
@@ -159,6 +180,8 @@ function createInteractiveMessage(body, page) {
         });
     }
 
+    reply.attachments.push(next_prev_buttons);
     reply.attachments.push(goToButtons);
+
     return reply;
 }
