@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const morgan = require('morgan');
 const Log = require('../Database/models/searchLog')
 const naverAPI = require('../APICalls/naver');
+const database = require('../Database');
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({
@@ -11,32 +12,15 @@ app.use(bodyParser.urlencoded({
 app.use(bodyParser.json());
 app.listen(3000, () => {
     console.log("STARTED");
+    database.connect();
 });
 
-app.post('/slack/callback', (req, res) => {
-    let payload = JSON.parse(req.body.payload);
-
-    switch (payload.callback_id) {
-        case 'pagination':
-            choose_searched_things(payload, res);
-            break;
-    }
-    res.json(payload);
-})
-
-function pagination(payload) {
-    let value = payload.actions[0].value.split('-')[0]
-    let page = payload.actions[0].value.split('-')[1]
-    return new Promise((resolve, reject) => {
-        switch (value) {
-            case 'next':
-
-                break;
-        }
+app.post('/slack/callback', pagination_middleware, (req, res) => {
+    res.send({
+        'text': `올바르지 않은 요청이지용~`,
+        'replace_original': false
     })
-
-
-}
+})
 
 function pagination_middleware(req, res, next) {
     let payload = JSON.parse(req.body.payload);
@@ -46,24 +30,54 @@ function pagination_middleware(req, res, next) {
     }
 
     let ts = payload.message_ts;
-    let channerl = payload.channel;
-    let btnValue = payload.actions.value;
+    let channel = payload.channel.id;
+    let btnValue = payload.actions[0].value;
     let _log;
+
+    console.log(ts);
+    console.log(channel);
+    console.log(btnValue);
 
     Log.findOne({
             ts,
             channel
-        }).then((log) => {
+        })
+        .then((log) => {
+            console.log(log);
+            _log = log;
             switch (btnValue) {
+                case 'toFirst':
+                    console.log('Go to first pressed');
+                    log.page = 1;
+                    break;
+                case 'prev10':
+                    console.log('prev10 pressed');
+                    log.page -= 10;
+                    break;
+                case 'prev':
+                    console.log('prev pressed');
+                    log.page -= 1;
+                    break;
                 case 'next':
-                    _log = log;
+                    console.log('next pressed');
                     log.page += 1;
-                    log.save();
-                    return naverAPI.shopping.search(_log.keyword, 3, (_log.page * 3) + 1);
+                    break;
+                case 'next10':
+                    console.log('next10 pressed');
+                    log.page += 10;
+                    break;
+                case 'toLast':
+                    console.log('Go to first pressed');
+                    log.page = log.totalPages;
+                    break;
             }
+            log.save();
+            let start = log.page * 3 - 2;
+            return naverAPI.shopping.search(_log.keyword, 3, start, log.sort);
         })
         .then((body) => {
-            return createInteractiveMessage(body, (_log.page + 1) / 3, _log.totalPages);
+            console.log(_log.page);
+            return createInteractiveMessage(body, _log.page, _log.totalPages);
         })
         .then((interactiveMessage) => {
             res.send(interactiveMessage);
@@ -79,10 +93,11 @@ function pagination_middleware(req, res, next) {
 function createInteractiveMessage(body, page, totalPages) {
 
     console.log(body);
-
+    console.log(page);
+    console.log(totalPages);
     let items = body.items;
     let reply = {
-        "text": `\n총 ${totalPages}페이지 중 1번째 페이지입니다.`,
+        "text": `\n총 ${totalPages}페이지 중 ${page}번째 페이지입니다.`,
         "attachments": []
     };
     for (let i in items) {
@@ -90,7 +105,7 @@ function createInteractiveMessage(body, page, totalPages) {
             "fallback": "choose searched things",
             "callback_id": "add to cart",
             "color": getRandomColor(),
-            "title": `${Number(i)+1}. ${items[i].title.replace(/<br>/g, '').replace(/\/<br>/g,'')}`,
+            "title": `${((Number(page)-1)*3+1)+Number(i)}. ${items[i].title.replace(/<b>/g, '').replace(/<\/b>/g,'')}`,
             "title_link": items[i].link,
             "fields": [{
                 "title": `${items[i].lprice}원 ~ ${items[i].hprice}원`,
@@ -122,6 +137,22 @@ function createInteractiveMessage(body, page, totalPages) {
         "actions": []
     };
 
+    if (1 < page) {
+        if (11 <= page) {
+            next_prev_buttons.actions.push({
+                "name": "btn",
+                "text": "Pre10",
+                "type": "button",
+                "value": "pre10"
+            })
+        }
+        next_prev_buttons.actions.push({
+            "name": "btn",
+            "text": "Pre",
+            "type": "button",
+            "value": "pre"
+        })
+    }
     if (page < totalPages) {
         next_prev_buttons.actions.push({
             "name": "btn",
@@ -135,23 +166,6 @@ function createInteractiveMessage(body, page, totalPages) {
                 "text": "Next10",
                 "type": "button",
                 "value": "next10"
-            })
-        }
-    }
-
-    if (1 < page) {
-        next_prev_buttons.actions.push({
-            "name": "btn",
-            "text": "Pre",
-            "type": "button",
-            "value": "pre"
-        })
-        if (11 <= page) {
-            next_prev_buttons.actions.push({
-                "name": "btn",
-                "text": "Pre10",
-                "type": "button",
-                "value": "pre10"
             })
         }
     }
@@ -184,4 +198,9 @@ function createInteractiveMessage(body, page, totalPages) {
     reply.attachments.push(goToButtons);
 
     return reply;
+}
+
+
+function getRandomColor() {
+    return '#' + Math.floor(Math.random() * 16777215).toString(16);;
 }

@@ -11,7 +11,7 @@ const Log = new Schema({
     createdAt : { type : Date, required : true, default : Date.now },
 }, { collection : 'Search-Logs'} );
 
-Log.statics.create = function(channel, ts, keyword, sort, page, totalPage){
+Log.statics.create = function(channel, ts, keyword, sort, page, totalPages){
     const log = new this({
         channel,
         ts,

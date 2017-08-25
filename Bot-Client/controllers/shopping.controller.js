@@ -20,7 +20,8 @@ module.exports = (controller) => {
                 return naverAPI.shopping.search(keyword, 3, 1, sort)
             })
             .then((body) => {
-                totalPage = body.total;
+                console.log(body.total)
+                totalPages = parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0);
                 return createInteractiveMessage(body);
             })
             .then((interactiveMessage) => {
@@ -29,7 +30,8 @@ module.exports = (controller) => {
                     // ts값을 가져와 Log생성
                     let channel = sentMessage.channel;
                     let ts = sentMessage.ts;
-
+                    console.log(totalPages);
+                    // Logging (channel, ts, keyword, sort, page, totalPages)
                     Log.create(channel, ts, keyword, sort, 1, totalPages).then(() => {
                         console.log("===========LOG===========");
                         console.log(`channel : ${channel}`);
@@ -37,7 +39,7 @@ module.exports = (controller) => {
                         console.log(`keyword : ${keyword}`);
                         console.log(`sort : ${sort}`);
                         console.log(`page : ${1}`);
-                        console.log(`totalPage : ${totalPage}`);
+                        console.log(`totalPage : ${totalPages}`);
                     })
                 });
             })
@@ -61,7 +63,7 @@ module.exports = (controller) => {
                 return naverAPI.shopping.search(keyword, 3, 1, sort)
             })
             .then((body) => {
-                totalPage = body.total;
+                totalPages = parseInt(body.total / 3) + (body.total % 3 != 0 ? 1 : 0);
                 return createInteractiveMessage(body);
             })
             .then((interactiveMessage) => {
@@ -70,7 +72,8 @@ module.exports = (controller) => {
                     // ts값을 가져와 Log생성
                     let channel = sentMessage.channel;
                     let ts = sentMessage.ts;
-
+                    console.log(totalPages);
+                    // Logging (channel, ts, keyword, sort, page, totalPages)
                     Log.create(channel, ts, keyword, sort, 1, totalPages).then(() => {
                         console.log("===========LOG===========");
                         console.log(`channel : ${channel}`);
@@ -78,7 +81,7 @@ module.exports = (controller) => {
                         console.log(`keyword : ${keyword}`);
                         console.log(`sort : ${sort}`);
                         console.log(`page : ${1}`);
-                        console.log(`totalPage : ${totalPage}`);
+                        console.log(`totalPage : ${totalPages}`);
                     })
                 });
             })
@@ -160,16 +163,6 @@ function createInteractiveMessage(body) {
         "color": "#5b8426",
         "actions": [{
             "name": "btn",
-            "text": "Pre10",
-            "type": "button",
-            "value": "pre10"
-        }, {
-            "name": "btn",
-            "text": "Pre",
-            "type": "button",
-            "value": "pre"
-        }, {
-            "name": "btn",
             "text": "Next",
             "type": "button",
             "value": "next"
@@ -190,11 +183,6 @@ function createInteractiveMessage(body) {
             "text": "Go to fisrt",
             "type": "button",
             "value": "toFirst"
-        }, {
-            "name": "btn",
-            "text": "Go to last",
-            "type": "button",
-            "value": "toLast"
         }]
     })
 
