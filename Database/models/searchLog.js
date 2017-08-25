@@ -9,16 +9,18 @@ const Log = new Schema({
     page : { type : Number, required: true },
     totalPages : { type : Number, required: true },
     createdAt : { type : Date, required : true, default : Date.now },
+    command : { type : String, required : true }
 }, { collection : 'Search-Logs'} );
 
-Log.statics.create = function(channel, ts, keyword, sort, page, totalPages){
+Log.statics.create = function(channel, ts, keyword, sort, page, totalPages, command){
     const log = new this({
         channel,
         ts,
         keyword, 
         sort,
         page,
-        totalPages
+        totalPages,
+        command
     });
 
     return log.save();
