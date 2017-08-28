@@ -1,7 +1,6 @@
 const app = require('express')();
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
-const naverAPI = require('../APICalls/naver');
 const database = require('../Database');
 const pagination_middleware = require('./middlewares/pagination');
 const addToCart_middleware = require('./middlewares/addToCart');

@@ -1,4 +1,5 @@
 const Log = require('../../Database/models/searchLog');
+const naverAPI = require('../../APICalls/naver');
 
 module.exports = (req, res, next) => {
     let payload = JSON.parse(req.body.payload);
