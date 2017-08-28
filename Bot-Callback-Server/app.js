@@ -1,7 +1,6 @@
 const app = require('express')();
 const bodyParser = require('body-parser');
 const morgan = require('morgan');
-const Log = require('../Database/models/searchLog')
 const naverAPI = require('../APICalls/naver');
 const database = require('../Database');
 const pagination_middleware = require('./middlewares/pagination');

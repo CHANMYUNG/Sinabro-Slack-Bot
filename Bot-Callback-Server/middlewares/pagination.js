@@ -1,3 +1,5 @@
+const Log = require('../Database/models/searchLog');
+
 module.exports = (req, res, next) => {
     let payload = JSON.parse(req.body.payload);
     if (payload.callback_id !== 'pagination') {
