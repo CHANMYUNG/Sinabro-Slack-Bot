@@ -108,7 +108,7 @@ function createInteractiveMessage(body, totalPages) {
                     "name": "add to cart",
                     "text": "팀 장바구니에 담기",
                     "type": "button",
-                    "value": "to team",
+                    "value": `to team/${i}`,
                     "confirm": {
                         "title": "Are you sure?",
                         "text": "항목을 팀 장바구니에 추가하시겠습니까?",
@@ -120,7 +120,7 @@ function createInteractiveMessage(body, totalPages) {
                     "name": "add to cart",
                     "text": "개인 장바구니에 담기",
                     "type": "button",
-                    "value": "to personal",
+                    "value": `to personal/${i}`,
                     "confirm": {
                         "title": "Are you sure?",
                         "text": "항목을 팀 장바구니에 추가하시겠습니까?",

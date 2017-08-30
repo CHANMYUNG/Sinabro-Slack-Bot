@@ -93,13 +93,25 @@ function createInteractiveMessage(body, page, totalPages) {
                     "name": "btn",
                     "text": "팀 장바구니에 담기",
                     "type": "button",
-                    "value": `to team`
+                    "value": `to team/${i}`,
+                    "confirm": {
+                        "title": "Are you sure?",
+                        "text": "항목을 팀 장바구니에 추가하시겠습니까?",
+                        "ok_text": "Yes",
+                        "dismiss_text": "No"
+                    }
                 },
                 {
                     "name": "btn",
                     "text": "개인 장바구니에 담기",
                     "type": "button",
-                    "value": `to personal`
+                    "value": `to personal/${i}`,
+                    "confirm": {
+                        "title": "Are you sure?",
+                        "text": "항목을 개인 장바구니에 추가하시겠습니까?",
+                        "ok_text": "Yes",
+                        "dismiss_text": "No"
+                    }
                 }
             ]
 
